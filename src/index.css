@@ -1,0 +1,76 @@
+.cdx-simple-image {}
+
+.cdx-simple-image .cdx-loader {
+  min-height: 200px;
+}
+
+.cdx-simple-image .cdx-input {
+  margin-top: 10px;
+}
+
+.cdx-simple-image img {
+  max-width: 100%;
+  vertical-align: bottom;
+  height: auto;
+}
+
+.cdx-simple-image__caption[contentEditable=true][data-placeholder]:empty::before {
+  position: absolute;
+  content: attr(data-placeholder);
+  color: #707684;
+  font-weight: normal;
+  opacity: 0;
+ }
+
+.cdx-simple-image__caption[contentEditable=true][data-placeholder]:empty::before {
+  opacity: 1;
+}
+
+.cdx-simple-image__caption[contentEditable=true][data-placeholder]:empty:focus::before {
+  opacity: 0;
+}
+
+
+.cdx-simple-image__picture--with-background {
+  background: #eff2f5;
+  padding: 10px;
+}
+
+.cdx-simple-image__picture--with-background img {
+  display: block;
+  max-width: 60%;
+  margin: 0 auto;
+}
+
+.cdx-simple-image__picture--with-border {
+  border: 1px solid #e8e8eb;
+  padding: 1px;
+}
+
+.cdx-simple-image__picture--stretched img {
+  max-width: none;
+  width: 100%;
+}
+
+.cdx-simple-image__picture {
+  position: relative;
+  border: 2px solid transparent;
+}
+ .cdx-simple-image__resize:hover, .cdx-simple-image__picture:active {
+  border: 2px solid rgb(23, 90,226);
+}
+
+.cdx-simple-image__picture .resize-point {
+  visibility: hidden;
+}
+
+.cdx-simple-image__picture:hover .resize-point, .cdx-simple-image__picture:active .resize-point {
+  visibility: visible;
+  width: 10px;
+  height: 10px;
+  position: absolute;
+  background: rgb(23, 90,226);
+  right: 0;
+  bottom: 0;
+  cursor: se-resize;
+}
