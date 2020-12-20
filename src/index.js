@@ -104,7 +104,7 @@ class SimpleImage {
       {
         name: 'stretched',
         icon: `<svg width="17" height="10" viewBox="0 0 17 10" xmlns="http://www.w3.org/2000/svg"><path d="M13.568 5.925H4.056l1.703 1.703a1.125 1.125 0 0 1-1.59 1.591L.962 6.014A1.069 1.069 0 0 1 .588 4.26L4.38.469a1.069 1.069 0 0 1 1.512 1.511L4.084 3.787h9.606l-1.85-1.85a1.069 1.069 0 1 1 1.512-1.51l3.792 3.791a1.069 1.069 0 0 1-.475 1.788L13.514 9.16a1.125 1.125 0 0 1-1.59-1.591l1.644-1.644z"/></svg>`,
-        label: 'Stretched'
+        label: 'With Background'
       },
       {
         name: 'withBackground',
@@ -132,7 +132,7 @@ class SimpleImage {
         innerHTML: this.data.caption || ''
       });
     caption.dataset.placeholder = 'Enter a caption';
-
+    image.setAttribute('crossorigin', 'anonymous');
     wrapper.appendChild(loader);
 
     if (this.data.url) {
@@ -187,19 +187,27 @@ class SimpleImage {
   save(blockContent) {
     let image = blockContent.querySelector('img'),
       caption = blockContent.querySelector('.' + this.CSS.input);
-
     if (!image) {
       return this.data;
     }
-
+    const dataURL = this.convertImageURLToBase64(image);
     return Object.assign(this.data, {
-      url: image.src,
+      url: dataURL,
       caption: caption.innerHTML,
       width: `${image.width}px`,
       height: `${image.height}px`
     });
   }
 
+  convertImageURLToBase64(image) {
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(image, 0, 0);
+    const dataURL = canvas.toDataURL("image/png");
+    return dataURL;
+  }
   /**
    * Sanitizer rules
    */
