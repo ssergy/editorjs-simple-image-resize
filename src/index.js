@@ -204,8 +204,9 @@ class SimpleImage {
     canvas.width = image.naturalWidth;
     canvas.height = image.naturalHeight;
     const ctx = canvas.getContext("2d");
-    ctx.drawImage(image, 0, 0);
-    const dataURL = canvas.toDataURL("image/png");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const dataURL = canvas.toDataURL("image/jpeg");
     return dataURL;
   }
   /**
