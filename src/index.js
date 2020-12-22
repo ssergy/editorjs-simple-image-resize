@@ -1,9 +1,7 @@
-
 /**
  * Build styles
  */
 require('./index.css').toString();
-
 /**
  * SimpleImage Tool for the Editor.js
  * Works only with pasted image URLs and requires no server-side uploader.
@@ -31,12 +29,23 @@ class SimpleImage {
    *   config - user config for Tool
    *   api - Editor.js API
    */
-  
+
+  static get toolbox() {
+    return {
+      title: 'Image',
+      icon: '<svg width="17" height="15" viewBox="0 0 336 276" xmlns="http://www.w3.org/2000/svg"><path d="M291 150V79c0-19-15-34-34-34H79c-19 0-34 15-34 34v42l67-44 81 72 56-29 42 30zm0 52l-43-30-56 30-81-67-66 39v23c0 19 15 34 34 34h178c17 0 31-13 34-29zM79 0h178c44 0 79 35 79 79v118c0 44-35 79-79 79H79c-44 0-79-35-79-79V79C0 35 35 0 79 0z"/></svg>'
+    };
+  }
+
   constructor({data, config, api}) {
     /**
      * Editor.js API
      */
     this.api = api;
+    this.wrapper = undefined;
+    this.uploadFile = undefined;
+    this.buttonIcon = `<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M3.15 13.628A7.749 7.749 0 0 0 10 17.75a7.74 7.74 0 0 0 6.305-3.242l-2.387-2.127-2.765 2.244-4.389-4.496-3.614 3.5zm-.787-2.303l4.446-4.371 4.52 4.63 2.534-2.057 3.533 2.797c.23-.734.354-1.514.354-2.324a7.75 7.75 0 1 0-15.387 1.325zM10 20C4.477 20 0 15.523 0 10S4.477 0 10 0s10 4.477 10 10-4.477 10-10 10z"/></svg>`
+    this.eventTypes = ['paste', 'drop'];
     /**
      * When block is only constructing,
      * current block points to previous block.
@@ -122,7 +131,56 @@ class SimpleImage {
    * @public
    */
   render() {
-    let wrapper = this._make('div', [this.CSS.baseClass, this.CSS.wrapper]),
+    this.wrapper = this._make('div', [this.CSS.baseClass, this.CSS.wrapper]);
+    if(this.data && this.data.url.length) {
+      this._createImage();
+    } else {
+      this.createFileButton();
+      const imageDataPresent = this.eventTypes.find(e => e === event.type);
+      if(!imageDataPresent) {
+        this.uploadFile.click();
+      }
+    }
+    return this.wrapper;
+  }
+
+  createFileButton() {
+    const uploadButton = this._make('div', ['cdx-button']);
+    uploadButton.innerHTML = `${this.buttonIcon} Select an Image`;
+    this.uploadFile = this._make('input');
+    this.uploadFile.setAttribute('type', 'file');
+    this.uploadFile.setAttribute('id', 'uploadedFile');
+    this.uploadFile.setAttribute('accept', 'image/*');
+    uploadButton.appendChild(this.uploadFile);
+    uploadButton.addEventListener('click', this.uploadButtonClick);
+    this.uploadFile.addEventListener('change', this.onSelectFile);
+    this.wrapper.appendChild(uploadButton);
+    const hiddenEl = document.createElement('input');
+    hiddenEl.classList.add('hidden-element');
+    hiddenEl.setAttribute('tabindex', 0);
+    this.wrapper.appendChild(hiddenEl);
+  }
+  uploadButtonClick = () => {
+    this.uploadFile.click();
+  }
+  onSelectFile = () => {
+  const selectedFile = document.getElementById('uploadedFile');
+  const file = selectedFile.files[0];
+  if(file.type === ('image/jpeg') || file.type === ('image/png')) {
+    this.onDropHandler(file).then(data => {
+      this.data = data;
+    });
+    this._createImage();
+  } else {
+    this.api.notifier.show({
+      message: 'Can not upload an image, try another',
+      style: 'error'
+    });
+    }
+  }
+
+  _createImage() {
+      this.wrapper.innerHTML = ''
       loader = this._make('div', this.CSS.loading),
       imageHolder = this._make('div', [this.CSS.imageHolder,this.CSS.resizeEnabled],{width:this.data.width, height: this.data.height}),
       image = this._make('img', '',{width:this.data.width, height: this.data.height}),
@@ -132,37 +190,38 @@ class SimpleImage {
         innerHTML: this.data.caption || ''
       });
     caption.dataset.placeholder = 'Enter a caption';
-
-    wrapper.appendChild(loader);
+    image.setAttribute('crossorigin', 'anonymous');
+    this.wrapper.appendChild(loader);
 
     if (this.data.url) {
       image.src = this.data.url;
     }
 
     image.onload = () => {
-      wrapper.classList.remove(this.CSS.loading);
+      this.wrapper.classList.remove(this.CSS.loading);
       imageHolder.appendChild(image);
       imageHolder.appendChild(resizeElementPointer);
-      wrapper.appendChild(imageHolder);
-      wrapper.appendChild(caption);
+      this.wrapper.appendChild(imageHolder);
+      this.wrapper.appendChild(caption);
       loader.remove();
       this._acceptTuneView();
     };
 
     image.onerror = (e) => {
-      // @todo use api.Notifies.show() to show error notification
-      console.log('Failed to load an image', e);
+      this.api.notifier.show({
+        message: `Failed to load an image ${e}`,
+        style: 'error'
+      })
     };
    
     this.nodes.imageHolder = imageHolder;
-    this.nodes.wrapper = wrapper;
+    this.nodes.wrapper = this.wrapper;
     this.nodes.image = image;
     this.nodes.caption = caption;
+    this.renderSettings();
     this.nodes.resizeElementPointer = resizeElementPointer;
     this.nodes.resizeElementPointer.addEventListener('mousedown', this.initializeImageResize)
-    return wrapper;
   }
-
   initializeImageResize = (event) => {
     this.disableImageSettingsTools();
     startX = event.clientX;
@@ -187,19 +246,28 @@ class SimpleImage {
   save(blockContent) {
     let image = blockContent.querySelector('img'),
       caption = blockContent.querySelector('.' + this.CSS.input);
-
     if (!image) {
       return this.data;
     }
-
+    const dataURL = this.convertImageURLToBase64(image);
     return Object.assign(this.data, {
-      url: image.src,
+      url: dataURL,
       caption: caption.innerHTML,
       width: `${image.width}px`,
       height: `${image.height}px`
     });
   }
 
+  convertImageURLToBase64(image) {
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const dataURL = canvas.toDataURL('image/jpeg');
+    return dataURL;
+  }
   /**
    * Sanitizer rules
    */
@@ -215,6 +283,15 @@ class SimpleImage {
     };
   }
 
+  validate(savedData) {
+
+    if(!savedData.url.trim()) {
+      return false;
+    }
+    else {
+      return true;
+    }
+  }
   /**
    * Read pasted image and convert it to base64
    *
@@ -250,6 +327,7 @@ class SimpleImage {
         this.data = {
           url: img.src,
         };
+        this._createImage();
         break;
 
       case 'pattern':
@@ -258,6 +336,7 @@ class SimpleImage {
         this.data = {
           url: text,
         };
+        this._createImage();
         break;
 
       case 'file':
@@ -267,7 +346,7 @@ class SimpleImage {
           .then(data => {
             this.data = data;
           });
-
+          this._createImage();
         break;
     }
   }
@@ -320,22 +399,24 @@ class SimpleImage {
    */
   renderSettings() {
     let wrapper = document.createElement('div');
-
-    this.settings.forEach( tune => {
-      let el = document.createElement('div');
-      const title = this.api.i18n.t(tune.label);
-      el.classList.add(this.CSS.settingsButton);
-      el.innerHTML = tune.icon;
-      this.api.tooltip.onHover(el, title, {placement: 'top'});
-      el.addEventListener('click', () => {
-        this._toggleTune(tune.name);
-        el.classList.toggle(this.CSS.settingsButtonActive);
+    if(this.data.url) {
+      this.settings.forEach( tune => {
+        let el = document.createElement('div');
+        const title = this.api.i18n.t(tune.label);
+        el.classList.add(this.CSS.settingsButton);
+        el.innerHTML = tune.icon;
+        this.api.tooltip.onHover(el, title, {placement: 'top'});
+        el.addEventListener('click', () => {
+          this._toggleTune(tune.name);
+          el.classList.toggle(this.CSS.settingsButtonActive);
+        });
+  
+        el.classList.toggle(this.CSS.settingsButtonActive, this.data[tune.name]);
+  
+        wrapper.appendChild(el);
       });
-
-      el.classList.toggle(this.CSS.settingsButtonActive, this.data[tune.name]);
-
-      wrapper.appendChild(el);
-    });
+    }
+    
     return wrapper;
   };
 

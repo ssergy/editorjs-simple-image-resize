@@ -75,3 +75,11 @@
   bottom: 0;
   cursor: se-resize;
 }
+
+.cdx-simple-image input {
+  display: none;
+}
+
+.hidden-element {
+  display: none;
+}
