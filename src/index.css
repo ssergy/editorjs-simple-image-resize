@@ -55,7 +55,7 @@
 .cdx-simple-image__picture {
   position: relative;
   border: 2px solid transparent;
-  box-sizing: content-box;
+  box-sizing: content-box
 }
  .cdx-simple-image__resize:hover, .cdx-simple-image__picture:active {
   border: 2px solid rgb(23, 90,226);
@@ -75,17 +75,9 @@
   bottom: 0;
   cursor: se-resize;
 }
-.simple-image {
-  padding: 20px 0;
-}
 
-.simple-image input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #e4e4e4;
-  border-radius: 3px;
-  outline: none;
-  font-size: 14px;
+.cdx-simple-image input {
+  display: none;
 }
 
 .hidden-element {

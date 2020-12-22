@@ -1,4 +1,3 @@
-
 /**
  * Build styles
  */
@@ -44,6 +43,9 @@ class SimpleImage {
      */
     this.api = api;
     this.wrapper = undefined;
+    this.uploadFile = undefined;
+    this.buttonIcon = `<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M3.15 13.628A7.749 7.749 0 0 0 10 17.75a7.74 7.74 0 0 0 6.305-3.242l-2.387-2.127-2.765 2.244-4.389-4.496-3.614 3.5zm-.787-2.303l4.446-4.371 4.52 4.63 2.534-2.057 3.533 2.797c.23-.734.354-1.514.354-2.324a7.75 7.75 0 1 0-15.387 1.325zM10 20C4.477 20 0 15.523 0 10S4.477 0 10 0s10 4.477 10 10-4.477 10-10 10z"/></svg>`
+    this.eventTypes = ['paste', 'drop'];
     /**
      * When block is only constructing,
      * current block points to previous block.
@@ -134,37 +136,49 @@ class SimpleImage {
       this._createImage();
     } else {
       this.createFileButton();
+      const imageDataPresent = this.eventTypes.find(e => e === event.type);
+      if(!imageDataPresent) {
+        this.uploadFile.click();
+      }
     }
     return this.wrapper;
   }
 
   createFileButton() {
-    const uploadButton = this._make('div');
-    const uploadFile = this._make('input');
-    uploadFile.setAttribute('type', 'file');
-    uploadFile.setAttribute('id', 'uploadedFile');
-    uploadButton.appendChild(uploadFile);
-    uploadFile.addEventListener('change', this.onSelectFile);
+    const uploadButton = this._make('div', ['cdx-button']);
+    uploadButton.innerHTML = `${this.buttonIcon} Select an Image`;
+    this.uploadFile = this._make('input');
+    this.uploadFile.setAttribute('type', 'file');
+    this.uploadFile.setAttribute('id', 'uploadedFile');
+    this.uploadFile.setAttribute('accept', 'image/*');
+    uploadButton.appendChild(this.uploadFile);
+    uploadButton.addEventListener('click', this.uploadButtonClick);
+    this.uploadFile.addEventListener('change', this.onSelectFile);
     this.wrapper.appendChild(uploadButton);
     const hiddenEl = document.createElement('input');
     hiddenEl.classList.add('hidden-element');
     hiddenEl.setAttribute('tabindex', 0);
     this.wrapper.appendChild(hiddenEl);
   }
-  
+  uploadButtonClick = () => {
+    this.uploadFile.click();
+  }
   onSelectFile = () => {
-   const selectedFile = document.getElementById('uploadedFile');
+  const selectedFile = document.getElementById('uploadedFile');
   const file = selectedFile.files[0];
-  if(selectedFile.files[0].type === ('image/jpeg') || selectedFile.files[0].type === ('image/png')) {
+  if(file.type === ('image/jpeg') || file.type === ('image/png')) {
     this.onDropHandler(file).then(data => {
       this.data = data;
     });
     this._createImage();
+  } else {
+    this.api.notifier.show({
+      message: 'Can not upload an image, try another',
+      style: 'error'
+    });
+    }
   }
-  else {
-    console.log('Failed to upload image');
-  }
-  }
+
   _createImage() {
       this.wrapper.innerHTML = ''
       loader = this._make('div', this.CSS.loading),
@@ -194,14 +208,17 @@ class SimpleImage {
     };
 
     image.onerror = (e) => {
-      // @todo use api.Notifies.show() to show error notification
-      console.log('Failed to load an image', e);
+      this.api.notifier.show({
+        message: `Failed to load an image ${e}`,
+        style: 'error'
+      })
     };
    
     this.nodes.imageHolder = imageHolder;
     this.nodes.wrapper = this.wrapper;
     this.nodes.image = image;
     this.nodes.caption = caption;
+    this.renderSettings();
     this.nodes.resizeElementPointer = resizeElementPointer;
     this.nodes.resizeElementPointer.addEventListener('mousedown', this.initializeImageResize)
   }
@@ -266,6 +283,15 @@ class SimpleImage {
     };
   }
 
+  validate(savedData) {
+
+    if(!savedData.url.trim()) {
+      return false;
+    }
+    else {
+      return true;
+    }
+  }
   /**
    * Read pasted image and convert it to base64
    *
@@ -373,22 +399,24 @@ class SimpleImage {
    */
   renderSettings() {
     let wrapper = document.createElement('div');
-
-    this.settings.forEach( tune => {
-      let el = document.createElement('div');
-      const title = this.api.i18n.t(tune.label);
-      el.classList.add(this.CSS.settingsButton);
-      el.innerHTML = tune.icon;
-      this.api.tooltip.onHover(el, title, {placement: 'top'});
-      el.addEventListener('click', () => {
-        this._toggleTune(tune.name);
-        el.classList.toggle(this.CSS.settingsButtonActive);
+    if(this.data.url) {
+      this.settings.forEach( tune => {
+        let el = document.createElement('div');
+        const title = this.api.i18n.t(tune.label);
+        el.classList.add(this.CSS.settingsButton);
+        el.innerHTML = tune.icon;
+        this.api.tooltip.onHover(el, title, {placement: 'top'});
+        el.addEventListener('click', () => {
+          this._toggleTune(tune.name);
+          el.classList.toggle(this.CSS.settingsButtonActive);
+        });
+  
+        el.classList.toggle(this.CSS.settingsButtonActive, this.data[tune.name]);
+  
+        wrapper.appendChild(el);
       });
-
-      el.classList.toggle(this.CSS.settingsButtonActive, this.data[tune.name]);
-
-      wrapper.appendChild(el);
-    });
+    }
+    
     return wrapper;
   };
 
