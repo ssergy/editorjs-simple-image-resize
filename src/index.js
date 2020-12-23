@@ -167,7 +167,7 @@ class SimpleImage {
   onSelectFile = () => {
   const selectedFile = document.getElementById('uploadedFile');
   const file = selectedFile.files[0];
-  if(file.type === this.fileTypes[0] || file.type === this.fileTypes[1]) {
+  if(this.fileTypes.includes(file.type)) {
     this.onDropHandler(file).then(data => {
       this.data = data;
     });
