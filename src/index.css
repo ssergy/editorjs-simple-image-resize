@@ -77,7 +77,7 @@
 }
 
 .cdx-simple-image input {
-  display: none;
+  display: none !important;
 }
 
 .hidden-element {
