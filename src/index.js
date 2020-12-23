@@ -43,9 +43,10 @@ class SimpleImage {
      */
     this.api = api;
     this.wrapper = undefined;
-    this.uploadFile = undefined;
+    this.uploadFileInput = undefined;
     this.buttonIcon = `<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M3.15 13.628A7.749 7.749 0 0 0 10 17.75a7.74 7.74 0 0 0 6.305-3.242l-2.387-2.127-2.765 2.244-4.389-4.496-3.614 3.5zm-.787-2.303l4.446-4.371 4.52 4.63 2.534-2.057 3.533 2.797c.23-.734.354-1.514.354-2.324a7.75 7.75 0 1 0-15.387 1.325zM10 20C4.477 20 0 15.523 0 10S4.477 0 10 0s10 4.477 10 10-4.477 10-10 10z"/></svg>`
     this.eventTypes = ['paste', 'drop'];
+    this.fileTypes = ['image/jpeg', 'image/png'];
     /**
      * When block is only constructing,
      * current block points to previous block.
@@ -138,42 +139,42 @@ class SimpleImage {
       this.createFileButton();
       const imageDataPresent = this.eventTypes.find(e => e === event.type);
       if(!imageDataPresent) {
-        this.uploadFile.click();
+        this.uploadFileInput.click();
       }
     }
     return this.wrapper;
   }
 
   createFileButton() {
-    const uploadButton = this._make('div', ['cdx-button']);
-    uploadButton.innerHTML = `${this.buttonIcon} Select an Image`;
-    this.uploadFile = this._make('input');
-    this.uploadFile.setAttribute('type', 'file');
-    this.uploadFile.setAttribute('id', 'uploadedFile');
-    this.uploadFile.setAttribute('accept', 'image/*');
-    uploadButton.appendChild(this.uploadFile);
-    uploadButton.addEventListener('click', this.uploadButtonClick);
-    this.uploadFile.addEventListener('change', this.onSelectFile);
-    this.wrapper.appendChild(uploadButton);
+    const uploadFileButton = this._make('div', ['cdx-button']);
+    uploadFileButton.innerHTML = `${this.buttonIcon} Select an Image`;
+    this.uploadFileInput = this._make('input');
+    this.uploadFileInput.setAttribute('type', 'file');
+    this.uploadFileInput.setAttribute('id', 'uploadedFile');
+    this.uploadFileInput.setAttribute('accept', 'image/*');
+    uploadFileButton.appendChild(this.uploadFileInput);
+    uploadFileButton.addEventListener('click', this.uploadButtonClick);
+    this.uploadFileInput.addEventListener('change', this.onSelectFile);
+    this.wrapper.appendChild(uploadFileButton);
     const hiddenEl = document.createElement('input');
     hiddenEl.classList.add('hidden-element');
     hiddenEl.setAttribute('tabindex', 0);
     this.wrapper.appendChild(hiddenEl);
   }
   uploadButtonClick = () => {
-    this.uploadFile.click();
+    this.uploadFileInput.click();
   }
   onSelectFile = () => {
   const selectedFile = document.getElementById('uploadedFile');
   const file = selectedFile.files[0];
-  if(file.type === ('image/jpeg') || file.type === ('image/png')) {
+  if(this.fileTypes.includes(file.type)) {
     this.onDropHandler(file).then(data => {
       this.data = data;
     });
     this._createImage();
   } else {
     this.api.notifier.show({
-      message: 'Can not upload an image, try another',
+      message: 'Not a supported type, please try other',
       style: 'error'
     });
     }
@@ -348,7 +349,7 @@ class SimpleImage {
           });
           this._createImage();
         break;
-    }
+    } 
   }
 
   /**
