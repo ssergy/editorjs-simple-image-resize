@@ -244,6 +244,7 @@ class SimpleImage {
    * @param {Element} blockContent - Tool's wrapper
    * @return {SimpleImageData}
    */
+  /*
   save(blockContent) {
     let image = blockContent.querySelector('img'),
       caption = blockContent.querySelector('.' + this.CSS.input);
@@ -258,7 +259,28 @@ class SimpleImage {
       height: `${image.height}px`
     });
   }
+  */
+  /**
+   * @public
+   * @param {Element} blockContent - Tool's wrapper
+   * @returns {SimpleImageData}
+   */
+  save(blockContent) {
+    const image = blockContent.querySelector('img'),
+        caption = blockContent.querySelector('.' + this.CSS.input);
 
+    if (!image) {
+      return this.data;
+    }
+
+    return Object.assign(this.data, {
+      url: image.src,
+      caption: caption.innerHTML,
+      width: `${image.width}px`,
+      height: `${image.height}px`
+    });
+  }
+  /*
   convertImageURLToBase64(image) {
     const canvas = document.createElement('canvas');
     canvas.width = image.naturalWidth;
@@ -269,6 +291,7 @@ class SimpleImage {
     const dataURL = canvas.toDataURL('image/jpeg');
     return dataURL;
   }
+  */
   /**
    * Sanitizer rules
    */
