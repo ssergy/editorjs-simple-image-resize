@@ -165,31 +165,31 @@ class SimpleImage {
     this.uploadFileInput.click();
   }
   onSelectFile = () => {
-  const selectedFile = document.getElementById('uploadedFile');
-  const file = selectedFile.files[0];
-  if(this.fileTypes.includes(file.type)) {
-    this.onDropHandler(file).then(data => {
-      this.data = data;
-    });
-    this._createImage();
-  } else {
-    this.api.notifier.show({
-      message: 'Not a supported type, please try other',
-      style: 'error'
-    });
+    const selectedFile = document.getElementById('uploadedFile');
+    const file = selectedFile.files[0];
+    if(this.fileTypes.includes(file.type)) {
+      this.onDropHandler(file).then(data => {
+        this.data = data;
+      });
+      this._createImage();
+    } else {
+      this.api.notifier.show({
+        message: 'Not a supported type, please try other',
+        style: 'error'
+      });
     }
   }
 
   _createImage() {
-      this.wrapper.innerHTML = ''
-      loader = this._make('div', this.CSS.loading),
-      imageHolder = this._make('div', [this.CSS.imageHolder,this.CSS.resizeEnabled],{width:this.data.width, height: this.data.height}),
-      image = this._make('img', '',{width:this.data.width, height: this.data.height}),
-      resizeElementPointer = this._make('div', this.CSS.resizePoint),
-      caption = this._make('div', [this.CSS.input, this.CSS.caption], {
-        contentEditable: 'true',
-        innerHTML: this.data.caption || ''
-      });
+    this.wrapper.innerHTML = ''
+    const loader = this._make('div', this.CSS.loading);
+    let imageHolder = this._make('div', [this.CSS.imageHolder,this.CSS.resizeEnabled],{width:this.data.width, height: this.data.height});
+    let image = this._make('img', '',{width:this.data.width, height: this.data.height});
+    let resizeElementPointer = this._make('div', this.CSS.resizePoint);
+    let caption = this._make('div', [this.CSS.input, this.CSS.caption], {
+      contentEditable: 'true',
+      innerHTML: this.data.caption || ''
+    });
     caption.dataset.placeholder = 'Enter a caption';
     image.setAttribute('crossorigin', 'anonymous');
     this.wrapper.appendChild(loader);
@@ -419,7 +419,7 @@ class SimpleImage {
 
   /**
    * Makes buttons with tunes: add background, add border, stretch image
-   * @return {HTMLDivElement}
+   * @return {HTMLDivElementrenderSettings}
    */
   renderSettings() {
     let wrapper = document.createElement('div');
